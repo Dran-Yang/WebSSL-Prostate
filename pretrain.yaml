@@ -1,0 +1,92 @@
+experiment:
+  name: webdino_mri_pretrain
+  output_dir: outputs/pretrain
+  seed: 42
+  precision: amp_bfloat16
+
+dataset:
+  root: ${env:WEB_DINO_MRI_ROOT:~/data/prostate_mri}
+  modalities: [t2w, adc, dwi]
+  allowed_suffixes: [.nii, .nii.gz]
+  image_size: 518
+  slice_selection:
+    policy: middle
+    stride: 2
+    max_slices_per_volume: 48
+  cache:
+    strategy: lru
+    max_items: 24
+  preprocessing:
+    clip_percentiles: [0.5, 99.5]
+    normalize_per_volume: true
+    epsilon: 1.0e-6
+  dataloader:
+    batch_size: 16
+    num_workers: 12
+    shuffle: true
+    pin_memory: true
+    persistent_workers: true
+    prefetch_factor: 2
+    drop_last: true
+
+augmentations:
+  global_crops: 2
+  global_crop_scale: [0.35, 1.0]
+  local_crops: 6
+  local_crop_scale: [0.1, 0.35]
+  gaussian_blur_prob: 0.5
+  local_blur_prob: 0.2
+  noise_std: 0.02
+  random_flip_prob: 0.5
+  random_rotate_deg: 10.0
+  intensity_jitter:
+    contrast: 0.15
+    brightness: 0.1
+    gamma: 0.2
+
+model:
+  hf_model_name: facebook/dinov2-large14
+  in_channels: 3
+  patch_size: 14
+  embed_dim: 1024
+  depth: 24
+  num_heads: 16
+  mlp_ratio: 4.0
+  qkv_bias: true
+  out_dim: 65536
+  student:
+    drop_path_rate: 0.1
+  teacher:
+    momentum_base: 0.996
+    momentum_warmup_epochs: 10
+  head:
+    hidden_dim: 4096
+    bottleneck_dim: 1024
+    norm_last_layer: true
+
+optimization:
+  epochs: 100
+  optimizer: adamw
+  base_lr: 5.0e-4
+  final_lr: 1.0e-5
+  warmup_epochs: 10
+  warmup_lr: 1.0e-6
+  weight_decay: 0.04
+  weight_decay_end: 0.4
+  betas: [0.9, 0.95]
+  clip_grad: 3.0
+
+temperature:
+  teacher_base: 0.04
+  teacher_final: 0.04
+  warmup_epochs: 30
+  student: 0.1
+
+logging:
+  log_every: 10
+  checkpoint_every: 1
+  eval_every: 5
+
+distributed:
+  world_size: 1
+  dist_url: env://

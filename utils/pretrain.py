@@ -9,7 +9,7 @@ import os
 import random
 import time
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -148,8 +148,14 @@ def create_dataloader(
     return loader, sampler
 
 
+ParameterGroups = Union[
+    Iterable[torch.nn.Parameter],
+    List[Dict[str, Any]],
+]
+
+
 def build_optimizer(
-    parameters: Iterable[torch.nn.Parameter],
+    parameters: ParameterGroups,
     cfg: Dict[str, object],
 ) -> optim.Optimizer:
     optimizer_name = str(cfg.get("optimizer", "adamw")).lower()
@@ -295,7 +301,19 @@ def run_pretrain(cfg: Dict[str, object]) -> None:
     model.to(device)
 
     optimization_cfg = dict(cfg.get("optimization") or {})
-    optimizer = build_optimizer(model.student_backbone.parameters(), optimization_cfg)
+    backbone_params = [p for p in model.student_backbone.parameters() if p.requires_grad]
+    head_params = [p for p in model.student_head.parameters() if p.requires_grad]
+    if not backbone_params:
+        raise RuntimeError("Student backbone has no trainable parameters.")
+
+    head_weight_decay = float(
+        optimization_cfg.get("head_weight_decay", optimization_cfg.get("weight_decay", 0.04))
+    )
+    param_groups = [
+        {"params": backbone_params},
+        {"params": head_params, "weight_decay": head_weight_decay},
+    ]
+    optimizer = build_optimizer(param_groups, optimization_cfg)
 
     epochs = int(optimization_cfg.get("epochs", 100))
     niter = len(dataloader)

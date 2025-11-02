@@ -1,0 +1,81 @@
+train:
+  dataset_path: ProstateSSL:split=TRAIN:root=X%3A/AIS_processed_20251015update:splits_root=pre-ssl-prostate/splits:sequences=ax_t2wi,ax_adc,ax_dwi_1500:segmentation_key=roi_Prostate:spatial_size=112:random_axes=True:random_slices=True:min_tumor_size=250:file_template={sequence}.nii:allow_nested_dirs=True:recursive_search=True:search_suffixes=.nii,.nii.gz
+  batch_size_per_gpu: 6
+  num_workers: 12
+  prefetch_factor: 4
+  persistent_workers: true
+  pin_memory: true
+  seed: 0
+  output_dir: out/pre_ssl/prostate_ssl_pretrain
+  OFFICIAL_EPOCH_LENGTH: 2200
+  auto_epoch_length: true
+  saveckp_freq: 10
+  img_size: 518
+  cache_dataset: false
+student:
+  arch: glioma_vit_base
+  patch_size: 14
+  drop_path_rate: 0.1
+  block_chunks: 0
+  pretrained_weights: out/eval/training_2499/dinov2_vitb14_pretrain.pth
+  use_mri_seq_embed: true
+teacher:
+  init_with_student_weights: true
+  momentum_teacher: 0.996
+  final_momentum_teacher: 1.0
+  warmup_teacher_temp: 0.04
+  teacher_temp: 0.07
+  warmup_teacher_temp_epochs: 20
+dino:
+  head_n_prototypes: 8192
+  head_hidden_dim: 2048
+  head_bottleneck_dim: 256
+  head_nlayers: 3
+  loss_weight: 1.0
+  koleo_loss_weight: 0.0
+ibot:
+  loss_weight: 1.0
+  head_n_prototypes: 8192
+  head_hidden_dim: 2048
+  head_bottleneck_dim: 256
+  head_nlayers: 3
+  mask_per_channel: true
+  mask_ratio_min_max:
+    - 0.2
+    - 0.6
+  mask_sample_probability: 0.5
+semi_supervised:
+  loss_weight: 0.0
+optim:
+  base_lr: 1.0e-4
+  weight_decay: 0.04
+  weight_decay_end: 0.2
+  epochs: 120
+  warmup_epochs: 10
+  min_lr: 1.0e-6
+  clip_grad: 3.0
+  freeze_backbone_epochs: 5
+  freeze_last_layer_epochs: 1
+  scaling_rule: identity
+  adamw_beta1: 0.9
+  adamw_beta2: 0.999
+crops:
+  global_crops_scale:
+    - 0.5
+    - 1.0
+  local_crops_scale:
+    - 0.2
+    - 0.5
+  local_crops_number: 6
+  global_crops_size: 224
+  local_crops_size: 112
+  crop_from_tumor_foreground: true
+  intensity_aug: bspline
+  max_blur_radius: 1.5
+  gamma_range:
+    - 0.75
+    - 1.5
+evaluation:
+  eval_period_iterations: 0
+logging:
+  log_period_iterations: 200

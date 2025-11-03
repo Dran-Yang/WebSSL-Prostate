@@ -19,7 +19,7 @@ self-supervised learning that reuses the building blocks from the upstream
 ## Quick Start
 
 1. **Prepare the dataset**
-   - Place every patient under `X:/AIS_processed_20251015update/<patient_id>/` and keep
+   - Place every patient under `X:/AIS_processed_20251015update/` and keep
      the following files accessible (they can be either `.nii`, `.nii.gz`, or a folder
      containing the single NIfTI volume):
      ```

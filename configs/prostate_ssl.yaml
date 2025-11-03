@@ -1,5 +1,5 @@
 train:
-  dataset_path: ProstateSSL:split=TRAIN:root=X:/AIS_processed_20251015update:splits_root=pre-ssl-prostate/splits:sequences=ax_t2wi,ax_adc,ax_dwi_1500:segmentation_key=roi_Prostate:spatial_size=112:random_axes=True:random_slices=True:min_tumor_size=250:file_template={sequence}.nii:allow_nested_dirs=True:recursive_search=True:search_suffixes=.nii,.nii.gz
+  dataset_path:ProstateSSL:split=TRAIN:root=X:/AIS_processed_20251015update:splits_root=pre-ssl-prostate/splits:sequences=ax_t2wi,ax_adc,ax_dwi_1500:segmentation_key=roi_Prostate:spatial_size=112:random_axes=True:random_slices=True:min_tumor_size=250:file_template={sequence}.nii:allow_nested_dirs=True:recursive_search=True:search_suffixes=.nii,.nii.gz
   batch_size_per_gpu: 6
   num_workers: 12
   prefetch_factor: 4
